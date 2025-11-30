@@ -16,6 +16,8 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFiles = (newFiles: FileList | null) => {
@@ -73,6 +75,45 @@ export default function Home() {
   const handleFileDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+  };
+
+  const handleMerge = async () => {
+    if (files.length < 2) {
+      setError("Please add at least 2 PDF files to merge");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
+
+      const response = await fetch("/api/merge", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to merge PDFs");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "merged.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to merge PDFs");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -190,8 +231,22 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                    <Button className="w-full h-12 bg-primary text-white text-base font-bold rounded-lg hover:bg-primary/90 transition-colors mt-4">
-                      Merge {files.length} PDF{files.length > 1 ? "s" : ""}
+                    {error && (
+                      <p className="text-sm text-red-500 text-center">{error}</p>
+                    )}
+                    <Button
+                      className="w-full h-12 bg-primary text-white text-base font-bold rounded-lg hover:bg-primary/90 transition-colors mt-4 disabled:opacity-50"
+                      onClick={handleMerge}
+                      disabled={isLoading || files.length < 2}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+                          Merging...
+                        </span>
+                      ) : (
+                        `Merge ${files.length} PDF${files.length > 1 ? "s" : ""}`
+                      )}
                     </Button>
                   </div>
                 )}
