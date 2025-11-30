@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     if (files.length < 2) {
       return NextResponse.json(
         { error: "Please provide at least 2 PDF files to merge" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,8 +34,7 @@ export async function POST(request: NextRequest) {
     console.error("Error merging PDFs:", error);
     return NextResponse.json(
       { error: "Failed to merge PDF files" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

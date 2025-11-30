@@ -1,5 +1,3 @@
-
-
 const uploadFiles = async (files: FileList) => {
   const formData = new FormData();
   for (const file of files) {

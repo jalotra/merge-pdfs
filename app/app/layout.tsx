@@ -25,9 +25,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} font-display`}>
-        {children}
-      </body>
+      <body className={`${inter.variable} font-display`}>{children}</body>
     </html>
   );
 }
